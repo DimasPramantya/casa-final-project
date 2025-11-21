@@ -45,7 +45,7 @@ public class SocketModule {
 
     private DataListener<ReqSendMessageDto> onHeartbeatReceived() {
         return (senderClient, data, ackSender) -> {
-            String userId = senderClient.get("userId");
+            String userId = senderClient.getAllRooms().stream().findFirst().orElse(null);
             if (userId != null) {
                 log.debug("Heartbeat received from User[{}]", userId);
                 User user = userService.getUserById(Integer.parseInt(userId));
@@ -62,12 +62,13 @@ public class SocketModule {
     private DataListener<ReqSendMessageDto> onChatReceived() {
         return (senderClient, data, ackSender) -> {
             log.info(data.toString());
-            String userId = senderClient.get("userId");
-            ConnectionDto connectionData = redisConnectionService.getConnection(userId);
+            HandshakeData handshake = senderClient.getHandshakeData();
+            String userId = handshake.getSingleUrlParam("userId");
+            User sender = userService.getUserById(Integer.parseInt(userId));
             MessageDto messageDto = MessageDto
                 .builder()
                 .senderId(userId)
-                .senderName(connectionData.getUsername())
+                .senderName(sender.getUsername())
                 .userTargetId(data.getUserTargetId())
                 .message(data.getMessage())
                 .build();
