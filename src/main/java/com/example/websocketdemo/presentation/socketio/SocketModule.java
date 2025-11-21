@@ -5,10 +5,13 @@ import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.listener.ConnectListener;
 import com.corundumstudio.socketio.listener.DataListener;
 import com.corundumstudio.socketio.listener.DisconnectListener;
+import com.example.websocketdemo.domain.User;
 import com.example.websocketdemo.infrastucture.redis.RedisConnectionService;
 import com.example.websocketdemo.presentation.socketio.dto.ConnectionDto;
-import com.example.websocketdemo.presentation.socketio.dto.Message;
+import com.example.websocketdemo.presentation.socketio.dto.MessageDto;
+import com.example.websocketdemo.presentation.socketio.dto.ReqSendMessageDto;
 import com.example.websocketdemo.usecase.SocketService;
+import com.example.websocketdemo.usecase.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -27,25 +30,28 @@ public class SocketModule {
     private final String machineId = UUID.randomUUID().toString();
 
     private final Map<String, ConnectionDto> sessionToRedisKey = new ConcurrentHashMap<>();
+    private final UserService userService;
 
-    public SocketModule(SocketIOServer server, SocketService socketService, RedisConnectionService redisConnectionService) {
+    public SocketModule(SocketIOServer server, SocketService socketService, RedisConnectionService redisConnectionService, UserService userService) {
         this.server = server;
         this.socketService = socketService;
         this.redisConnectionService = redisConnectionService;
         server.addConnectListener(onConnected());
         server.addDisconnectListener(onDisconnected());
-        server.addEventListener("send_message", Message.class, onChatReceived());
-        server.addEventListener("heartbeat", Message.class, onHeartbeatReceived());
+        server.addEventListener("send_message", ReqSendMessageDto.class, onChatReceived());
+        server.addEventListener("heartbeat", ReqSendMessageDto.class, onHeartbeatReceived());
+        this.userService = userService;
     }
 
-    private DataListener<Message> onHeartbeatReceived() {
+    private DataListener<ReqSendMessageDto> onHeartbeatReceived() {
         return (senderClient, data, ackSender) -> {
             String userId = senderClient.get("userId");
             if (userId != null) {
                 log.debug("Heartbeat received from User[{}]", userId);
+                User user = userService.getUserById(Integer.parseInt(userId));
                 ConnectionDto connectionDto = sessionToRedisKey.get(userId);
                 if (connectionDto == null) {
-                    connectionDto = new ConnectionDto(machineId, "queue-1");
+                    connectionDto = new ConnectionDto(machineId,  user.getUsername(),"queue-1");
                 }
                 redisConnectionService.saveConnection(userId, connectionDto);
             }
@@ -53,10 +59,19 @@ public class SocketModule {
     }
 
 
-    private DataListener<Message> onChatReceived() {
+    private DataListener<ReqSendMessageDto> onChatReceived() {
         return (senderClient, data, ackSender) -> {
             log.info(data.toString());
-            socketService.sendMessage(data.getRoom(),"get_message", senderClient, data.getMessage());
+            String userId = senderClient.get("userId");
+            ConnectionDto connectionData = redisConnectionService.getConnection(userId);
+            MessageDto messageDto = MessageDto
+                .builder()
+                .senderId(userId)
+                .senderName(connectionData.getUsername())
+                .userTargetId(data.getUserTargetId())
+                .message(data.getMessage())
+                .build();
+            socketService.sendMessage(messageDto,"get_message", senderClient);
         };
     }
 
@@ -64,20 +79,21 @@ public class SocketModule {
     private ConnectListener onConnected() {
         return (client) -> {
             HandshakeData handshake = client.getHandshakeData();
-            String room = handshake.getSingleUrlParam("room");
-            if (room != null) {
-                client.joinRoom(room);
-            }
-
             String userId = coalesce(
-                    headerOrNull(handshake, "userId"),
-                    handshake.getSingleUrlParam("userId")
+                headerOrNull(handshake, "userId"),
+                handshake.getSingleUrlParam("userId")
             );
+            String username = coalesce(
+                headerOrNull(handshake, "userName"),
+                handshake.getSingleUrlParam("userName")
+            );
+            client.joinRoom(userId);
 
             String redisKey = firstNonBlank(userId);
             ConnectionDto connectionDto = new ConnectionDto(
-                    machineId, "queue-"+machineId
+                    machineId, "queue-"+machineId, username
             );
+            userService.saveUser(userId, username);
 
             if (redisKey != null) {
                 redisConnectionService.saveConnection(redisKey,connectionDto);

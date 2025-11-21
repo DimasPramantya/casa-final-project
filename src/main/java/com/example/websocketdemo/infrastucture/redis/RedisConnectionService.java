@@ -28,6 +28,7 @@ public class RedisConnectionService {
         Map<String, Object> payload = new HashMap<>();
         payload.put("queueName", dto.getQueueName());
         payload.put("machineId", dto.getMachineId());
+        payload.put("username", dto.getUsername());
         try {
             String json = objectMapper.writeValueAsString(payload);
             stringRedisTemplate.opsForValue().set(key, json);
@@ -37,6 +38,25 @@ public class RedisConnectionService {
             log.error("Failed to serialize connection payload for key={}: {}", key, e.getMessage());
         } catch (Exception e) {
             log.error("Failed to save connection to Redis for key={}: {}", key, e.getMessage());
+        }
+    }
+
+    public ConnectionDto getConnection(String key) {
+        if (key == null || key.isBlank()) {
+            return null;
+        }
+        try {
+            String json = stringRedisTemplate.opsForValue().get(key);
+            if (json == null) {
+                return null;
+            }
+            return objectMapper.readValue(json, ConnectionDto.class);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to deserialize connection payload for key={}: {}", key, e.getMessage());
+            return null;
+        } catch (Exception e) {
+            log.error("Failed to get connection from Redis for key={}: {}", key, e.getMessage());
+            return null;
         }
     }
 

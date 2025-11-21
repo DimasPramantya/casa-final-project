@@ -8,4 +8,5 @@ import lombok.Data;
 public class ConnectionDto {
     private String machineId;
     private String queueName;
+    private String username;
 }
