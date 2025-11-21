@@ -28,7 +28,7 @@ public class ConversationService {
     public Conversation getConversation(Integer userOneId, Integer userTwoId){
         User userOne = userService.getUserById(userOneId);
         User userTwo = userService.getUserById(userTwoId);
-        return conversationRepository.findByUserOneAndUserTwo(userOne, userTwo);
+        return conversationRepository.findByUserOneAndUserTwo(userOne, userTwo).orElse(null);
     }
 
     public void saveConversationMessage(
@@ -45,7 +45,6 @@ public class ConversationService {
         );
     }
 
-    @Cacheable(value = "getConversation", key = "{#userOneId, #userTwoId}")
     public Conversation saveConversation(Integer userOneId, Integer userTwoId){
         User userOne = userService.getUserById(userOneId);
         User userTwo = userService.getUserById(userTwoId);

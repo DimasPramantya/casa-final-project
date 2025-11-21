@@ -24,6 +24,8 @@ public class SocketService {
                     Integer.parseInt(message.getSenderId()),
                     Integer.parseInt(message.getUserTargetId())
                 );
+                log.info("conv");
+                log.info(String.valueOf(conversation));
                 if(conversation == null){
                     conversation = conversationService.saveConversation(
                         Integer.parseInt(message.getSenderId()),
