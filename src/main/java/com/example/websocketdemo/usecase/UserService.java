@@ -16,7 +16,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    @Cacheable(value = "userById", key = "{id}")
+    @Cacheable(value = "userById", key = "{#id}")
     public User getUserById(Integer id){
         return userRepository.findById(id).orElseThrow(
             () -> new RuntimeException("User not found")
@@ -26,7 +26,7 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    @CacheEvict(value = "userById", key = "{id}")
+    @CacheEvict(value = "userById", key = "{#userId}")
     public User saveUser(String userId, String username){
         Integer userIdInt = Integer.parseInt(userId);
         User user = userRepository.findById(userIdInt).orElse(null);

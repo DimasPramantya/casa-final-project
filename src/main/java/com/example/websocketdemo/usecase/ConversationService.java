@@ -24,7 +24,7 @@ public class ConversationService {
         this.chatMessageRepository = chatMessageRepository;
     }
 
-    @Cacheable(value = "getConversation", key = "{userOneId, userTwoId}")
+    @Cacheable(value = "getConversation", key = "{#userOneId, #userTwoId}")
     public Conversation getConversation(Integer userOneId, Integer userTwoId){
         User userOne = userService.getUserById(userOneId);
         User userTwo = userService.getUserById(userTwoId);
@@ -45,7 +45,7 @@ public class ConversationService {
         );
     }
 
-    @Cacheable(value = "getConversation", key = "{userOneId, userTwoId}")
+    @Cacheable(value = "getConversation", key = "{#userOneId, #userTwoId}")
     public Conversation saveConversation(Integer userOneId, Integer userTwoId){
         User userOne = userService.getUserById(userOneId);
         User userTwo = userService.getUserById(userTwoId);
