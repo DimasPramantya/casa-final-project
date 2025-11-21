@@ -80,28 +80,30 @@ public class SocketModule {
     private ConnectListener onConnected() {
         return (client) -> {
             HandshakeData handshake = client.getHandshakeData();
-            String userId = coalesce(
-                headerOrNull(handshake, "userId"),
-                handshake.getSingleUrlParam("userId")
-            );
-            String username = coalesce(
-                headerOrNull(handshake, "userName"),
-                handshake.getSingleUrlParam("userName")
-            );
-            client.joinRoom(userId);
+            String room = handshake.getSingleUrlParam("room");
+            if (room != null) {
+                client.joinRoom(room);
+            }
 
-            String redisKey = firstNonBlank(userId);
+            String userId = handshake.getSingleUrlParam("user_id");
+            if (userId == null) {
+                userId = handshake.getSingleUrlParam("userId");
+            }
+
+            String redisKey = userId;
+
             ConnectionDto connectionDto = new ConnectionDto(
                     machineId, "queue-"+machineId, username
             );
             userService.saveUser(userId, username);
 
-            if (redisKey != null) {
-                redisConnectionService.saveConnection(redisKey,connectionDto);
-                sessionToRedisKey.put(userId, connectionDto); // map socket session -> redis key
+            if (redisKey != null && !redisKey.trim().isEmpty()) {
+                client.set("userId", redisKey);
+                redisConnectionService.saveConnection(redisKey, connectionDto);
+                sessionToRedisKey.put(userId, connectionDto);
                 log.info("Socket[{}] connected. Saved to Redis with key={} user_id={} machine_id={}", machineId, redisKey, userId, machineId);
             } else {
-                log.warn("Socket[{}] connected without session_id or user_id; skipping Redis save", machineId);
+                log.warn("Socket[{}] connected without user_id param; skipping Redis save", machineId);
             }
 
             log.info("Socket ID[{}] Connected to socket", machineId);
@@ -112,41 +114,22 @@ public class SocketModule {
     private DisconnectListener onDisconnected() {
         return client -> {
             HandshakeData handshake = client.getHandshakeData();
-            String userId = coalesce(
-                    headerOrNull(handshake, "userId"),
-                    handshake.getSingleUrlParam("userId")
-            );
+
+            String userId = handshake.getSingleUrlParam("user_id");
+            if (userId == null) {
+                userId = handshake.getSingleUrlParam("userId");
+            }
+
             String machineId = client.getSessionId().toString();
-            ConnectionDto redisKey = sessionToRedisKey.remove(userId);
-            if (redisKey != null) {
-                redisConnectionService.deleteConnection(userId);
+            if (userId != null && !userId.trim().isEmpty()) {
+                ConnectionDto redisKey = sessionToRedisKey.remove(userId);
+                if (redisKey != null) {
+                    redisConnectionService.deleteConnection(userId);
+                }
+            } else {
+                log.debug("Client disconnected but userId was null (likely connection failed or anonymous)");
             }
             log.info("Client[{}] - Disconnected from socket", machineId);
         };
-    }
-
-    private String headerOrNull(HandshakeData handshake, String key) {
-        try {
-            String val = handshake.getHttpHeaders().get(key);
-            return isBlank(val) ? null : val;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private String firstNonBlank(String... vals) {
-        if (vals == null) return null;
-        for (String v : vals) {
-            if (!isBlank(v)) return v;
-        }
-        return null;
-    }
-
-    private boolean isBlank(String s) {
-        return s == null || s.trim().isEmpty();
-    }
-
-    private String coalesce(String a, String b) {
-        return !isBlank(a) ? a : b;
     }
 }
