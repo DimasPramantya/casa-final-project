@@ -112,10 +112,7 @@ public class SocketModule {
         return client -> {
             HandshakeData handshake = client.getHandshakeData();
 
-            String userId = handshake.getSingleUrlParam("user_id");
-            if (userId == null) {
-                userId = handshake.getSingleUrlParam("userId");
-            }
+            String userId = handshake.getSingleUrlParam("userId");
 
             String machineId = client.getSessionId().toString();
             if (userId != null && !userId.trim().isEmpty()) {
