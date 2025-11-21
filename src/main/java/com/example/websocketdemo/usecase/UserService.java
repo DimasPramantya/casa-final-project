@@ -6,6 +6,8 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserService {
     private final UserRepository userRepository;
@@ -20,6 +22,9 @@ public class UserService {
             () -> new RuntimeException("User not found")
         );
     }
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
 
     @CacheEvict(value = "userById", key = "{id}")
     public User saveUser(String userId, String username){
@@ -32,6 +37,7 @@ public class UserService {
             );
             user = userRepository.save(user);
         }else{
+
             if(!user.getUsername().equals(username)){
                 user.setUsername(username);
                 user = userRepository.save(user);
