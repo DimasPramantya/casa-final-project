@@ -6,6 +6,8 @@ import com.example.websocketdemo.domain.entity.Conversation;
 import com.example.websocketdemo.domain.entity.User;
 import com.example.websocketdemo.repository.ChatMessageRepository;
 import com.example.websocketdemo.repository.ConversationRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,7 @@ import java.util.List;
 
 @Service
 public class ConversationService {
+    private static final Logger log = LoggerFactory.getLogger(ConversationService.class);
     private final ConversationRepository conversationRepository;
     private final UserService userService;
     private final ChatMessageRepository chatMessageRepository;
@@ -26,11 +29,10 @@ public class ConversationService {
         this.chatMessageRepository = chatMessageRepository;
     }
 
-    @Cacheable(value = "getConversation", key = "{#userOneId, #userTwoId}")
+    @Cacheable(value = "getConversation", key = "{#userOneId, #userTwoId}", unless = "#result == null")
     public Conversation getConversation(Integer userOneId, Integer userTwoId){
-        User userOne = userService.getUserById(userOneId);
-        User userTwo = userService.getUserById(userTwoId);
-        return conversationRepository.findByUserOneAndUserTwo(userOne, userTwo).orElse(null);
+        log.info("userOneId: {}, userTwoId: {}", userOneId, userTwoId);
+        return conversationRepository.findByUserOneAndUserTwo(userOneId, userTwoId).orElse(null);
     }
 
     public void saveConversationMessage(

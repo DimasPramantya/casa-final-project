@@ -13,18 +13,15 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "conversations", indexes = {
-        @Index(name = "idx_user_one_conversation", columnList = "userOne"),
-        @Index(name = "idx_user_two_conversation", columnList = "userTwo")
-})
+@Table(name = "conversations")
 public class Conversation implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @ManyToOne(fetch = FetchType.LAZY)
+    private Integer id;
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id_one", referencedColumnName = "id")
     private User userOne;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id_two", referencedColumnName = "id")
     private User userTwo;
 }
