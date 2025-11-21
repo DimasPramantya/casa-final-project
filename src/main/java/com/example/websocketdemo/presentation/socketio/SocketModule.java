@@ -80,12 +80,9 @@ public class SocketModule {
     private ConnectListener onConnected() {
         return (client) -> {
             HandshakeData handshake = client.getHandshakeData();
-            String room = handshake.getSingleUrlParam("room");
-            if (room != null) {
-                client.joinRoom(room);
-            }
-
-            String userId = handshake.getSingleUrlParam("user_id");
+            String userId = handshake.getSingleUrlParam("userId");
+            client.joinRoom(userId);
+            String username = handshake.getSingleUrlParam("userName");
             if (userId == null) {
                 userId = handshake.getSingleUrlParam("userId");
             }
