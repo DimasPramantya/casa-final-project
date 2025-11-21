@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -23,8 +24,8 @@ public class SocketModule {
     private final SocketIOServer server;
     private final SocketService socketService;
     private final RedisConnectionService redisConnectionService;
+    private final String machineId = UUID.randomUUID().toString();
 
-    // Track mapping from socket sessionId -> redis key for cleanup on disconnect
     private final Map<String, ConnectionDto> sessionToRedisKey = new ConcurrentHashMap<>();
 
     public SocketModule(SocketIOServer server, SocketService socketService, RedisConnectionService redisConnectionService) {
@@ -34,6 +35,21 @@ public class SocketModule {
         server.addConnectListener(onConnected());
         server.addDisconnectListener(onDisconnected());
         server.addEventListener("send_message", Message.class, onChatReceived());
+        server.addEventListener("heartbeat", Message.class, onHeartbeatReceived());
+    }
+
+    private DataListener<Message> onHeartbeatReceived() {
+        return (senderClient, data, ackSender) -> {
+            String userId = senderClient.get("userId");
+            if (userId != null) {
+                log.debug("Heartbeat received from User[{}]", userId);
+                ConnectionDto connectionDto = sessionToRedisKey.get(userId);
+                if (connectionDto == null) {
+                    connectionDto = new ConnectionDto(machineId, "queue-1");
+                }
+                redisConnectionService.saveConnection(userId, connectionDto);
+            }
+        };
     }
 
 
@@ -54,14 +70,13 @@ public class SocketModule {
             }
 
             String userId = coalesce(
-                    headerOrNull(handshake, "user_id"),
-                    handshake.getSingleUrlParam("user_id")
+                    headerOrNull(handshake, "userId"),
+                    handshake.getSingleUrlParam("userId")
             );
 
             String redisKey = firstNonBlank(userId);
-            String machineId = client.getSessionId().toString();
             ConnectionDto connectionDto = new ConnectionDto(
-                    machineId, "queue-1"
+                    machineId, "queue-"+machineId
             );
 
             if (redisKey != null) {
@@ -81,8 +96,8 @@ public class SocketModule {
         return client -> {
             HandshakeData handshake = client.getHandshakeData();
             String userId = coalesce(
-                    headerOrNull(handshake, "user_id"),
-                    handshake.getSingleUrlParam("user_id")
+                    headerOrNull(handshake, "userId"),
+                    handshake.getSingleUrlParam("userId")
             );
             String machineId = client.getSessionId().toString();
             ConnectionDto redisKey = sessionToRedisKey.remove(userId);

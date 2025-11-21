@@ -20,22 +20,17 @@ public class RedisConnectionService {
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    /**
-     * Save a connection record into Redis.
-     * @param key the redis key (session_id or user_id)
-     */
     public void saveConnection(String key, ConnectionDto dto) {
         if (key == null || key.isBlank()) {
             log.warn("Skip saving to Redis: key is blank");
             return;
         }
         Map<String, Object> payload = new HashMap<>();
-        payload.put("queue_name", dto.getQueueName());
-        payload.put("machine_id", dto.getMachineId());
+        payload.put("queueName", dto.getQueueName());
+        payload.put("machineId", dto.getMachineId());
         try {
             String json = objectMapper.writeValueAsString(payload);
             stringRedisTemplate.opsForValue().set(key, json);
-            // Optional TTL to avoid stale keys if disconnect hook fails; adjust or remove as needed.
             stringRedisTemplate.expire(key, 1, TimeUnit.DAYS);
             log.info("Saved connection to Redis. key={}, value={}", key, json);
         } catch (JsonProcessingException e) {
@@ -45,9 +40,6 @@ public class RedisConnectionService {
         }
     }
 
-    /**
-     * Remove a connection record from Redis.
-     */
     public void deleteConnection(String key) {
         try {
             if (key != null && !key.isBlank()) {
