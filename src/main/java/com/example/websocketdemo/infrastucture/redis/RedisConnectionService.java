@@ -1,6 +1,6 @@
 package com.example.websocketdemo.infrastucture.redis;
 
-import com.example.websocketdemo.presentation.socketio.dto.ConnectionDto;
+import com.example.websocketdemo.domain.dto.ConnectionDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

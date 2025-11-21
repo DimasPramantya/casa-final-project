@@ -1,12 +1,13 @@
-package com.example.websocketdemo.domain;
+package com.example.websocketdemo.domain.entity;
 
-import com.example.websocketdemo.presentation.socketio.dto.MessageType;
+import com.example.websocketdemo.domain.dto.MessageType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 
 @Data
@@ -15,7 +16,7 @@ import java.sql.Timestamp;
 @Builder
 @Entity
 @Table(name = "chat_messages")
-public class ChatMessage {
+public class ChatMessage implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -1,8 +1,8 @@
 package com.example.websocketdemo.usecase;
 
 import com.corundumstudio.socketio.SocketIOClient;
-import com.example.websocketdemo.domain.Conversation;
-import com.example.websocketdemo.presentation.socketio.dto.MessageDto;
+import com.example.websocketdemo.domain.dto.MessageDto;
+import com.example.websocketdemo.domain.entity.Conversation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
