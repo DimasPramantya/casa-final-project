@@ -44,6 +44,7 @@ public class ConversationService {
                 .createdAt(Timestamp.from(Instant.now()))
                 .conversation(conversation)
                 .content(message.getMessage())
+                .type(message.getType())
                 .senderId(Integer.parseInt(message.getSenderId()))
             .build()
         );
