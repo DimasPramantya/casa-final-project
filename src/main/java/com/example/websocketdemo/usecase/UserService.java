@@ -1,6 +1,6 @@
 package com.example.websocketdemo.usecase;
 
-import com.example.websocketdemo.domain.User;
+import com.example.websocketdemo.domain.entity.User;
 import com.example.websocketdemo.repository.UserRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;

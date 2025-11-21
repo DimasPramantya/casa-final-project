@@ -1,7 +1,7 @@
 package com.example.websocketdemo.presentation.rest;
 
 
-import com.example.websocketdemo.domain.User;
+import com.example.websocketdemo.domain.entity.User;
 import com.example.websocketdemo.usecase.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

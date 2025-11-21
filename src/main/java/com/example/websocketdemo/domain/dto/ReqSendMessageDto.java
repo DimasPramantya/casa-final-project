@@ -1,4 +1,4 @@
-package com.example.websocketdemo.presentation.socketio.dto;
+package com.example.websocketdemo.domain.dto;
 
 import lombok.Data;
 

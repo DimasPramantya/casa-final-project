@@ -1,6 +1,6 @@
-package com.example.websocketdemo.domain;
+package com.example.websocketdemo.domain.entity;
 
-import com.example.websocketdemo.presentation.socketio.dto.MessageType;
+import com.example.websocketdemo.domain.dto.MessageType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

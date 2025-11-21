@@ -1,7 +1,7 @@
 package com.example.websocketdemo.repository;
 
-import com.example.websocketdemo.domain.Conversation;
-import com.example.websocketdemo.domain.User;
+import com.example.websocketdemo.domain.entity.Conversation;
+import com.example.websocketdemo.domain.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

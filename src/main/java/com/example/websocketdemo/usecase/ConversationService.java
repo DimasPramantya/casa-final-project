@@ -1,9 +1,9 @@
 package com.example.websocketdemo.usecase;
 
-import com.example.websocketdemo.domain.ChatMessage;
-import com.example.websocketdemo.domain.Conversation;
-import com.example.websocketdemo.domain.User;
-import com.example.websocketdemo.presentation.socketio.dto.MessageDto;
+import com.example.websocketdemo.domain.dto.MessageDto;
+import com.example.websocketdemo.domain.entity.ChatMessage;
+import com.example.websocketdemo.domain.entity.Conversation;
+import com.example.websocketdemo.domain.entity.User;
 import com.example.websocketdemo.repository.ChatMessageRepository;
 import com.example.websocketdemo.repository.ConversationRepository;
 import org.springframework.cache.annotation.Cacheable;

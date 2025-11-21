@@ -1,4 +1,4 @@
-package com.example.websocketdemo.domain;
+package com.example.websocketdemo.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
