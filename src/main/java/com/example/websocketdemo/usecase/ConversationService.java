@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class ConversationService {
@@ -45,6 +47,7 @@ public class ConversationService {
         );
     }
 
+    @Cacheable(value = "getConversation", key = "{#userOneId, #userTwoId}")
     public Conversation saveConversation(Integer userOneId, Integer userTwoId){
         User userOne = userService.getUserById(userOneId);
         User userTwo = userService.getUserById(userTwoId);
@@ -53,5 +56,15 @@ public class ConversationService {
                 .userTwo(userTwo)
                 .build();
         return conversationRepository.save(conversation);
+    }
+
+    public List<ChatMessage> getChatHistory(Integer userOneId, Integer userTwoId) {
+        Conversation conversation = getConversation(userOneId, userTwoId);
+
+        if (conversation == null) {
+            return new ArrayList<>();
+        }
+
+        return chatMessageRepository.findAllByConversationOrderByCreatedAtAsc(conversation);
     }
 }
